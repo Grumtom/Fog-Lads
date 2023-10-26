@@ -27,12 +27,20 @@ public class PlayerCharacterControls : NetworkBehaviour
 
     [SerializeField] private GameObject pingSpawnPoint;
     [SerializeField] private GameObject pingSpawnDir;
-    
+
+    [SerializeField] private GameObject characterModel;
     public Player Player;
+    [SerializeField] private Image deathImage;
+    private bool alive = true;
+    
+    [SerializeField] private MeshRenderer[] enemyRenderers;
+    [SerializeField] private GameObject enemyVisuals;
+    private float fogDensity;
 
     private GameObject heldItem;
     private bool isHolding = false;
-    
+
+    private GameObject camStuff;
     private GameObject cameraTargetObject;
     private Vector3 cameraTarget;
 
@@ -56,7 +64,7 @@ public class PlayerCharacterControls : NetworkBehaviour
         print("Rigging player character");
         gameObject.name = "Local Player Character";
 
-        Instantiate(camStuffPrefab, transform);
+        camStuff = Instantiate(camStuffPrefab, transform);
         
         Controller = GetComponent<CharacterController>();
         PlayerInput = GetComponent<PlayerInput>();
@@ -71,17 +79,85 @@ public class PlayerCharacterControls : NetworkBehaviour
         PlayerInput.enabled = true;
         
         Cursor.lockState = CursorLockMode.Locked;
+        
+        
+        GameObject[] enemyTags = GameObject.FindGameObjectsWithTag("Enemy");
+        enemyRenderers = new MeshRenderer[enemyTags.Length];
+        
+        for (int i = 0; i < enemyTags.Length; i++)
+        {
+            enemyRenderers[i] = enemyTags[i].GetComponent<MeshRenderer>();
+        }
+
+        enemyVisuals = GameObject.FindGameObjectWithTag("EnemyVisuals");
     }
     
     private void Update()
     {
-        ReadInputs();
+        if (alive)
+        {
+            ReadInputs();
+        }
     }
 
     private void FixedUpdate()
     {
-        Movement();
-        checkForInteractable();
+        if (alive)
+        {
+            Movement();
+            checkForInteractable();
+            updateRender();
+            if (transform.position.y <= -10)
+            {
+                die();
+            }
+        }
+    }
+
+    void updateRender()
+    {
+        if (enemyVisuals == null)
+        {
+            enemyVisuals = GameObject.FindGameObjectWithTag("EnemyVisuals");
+            print("Double checked enemy visuals, found " + enemyVisuals);
+        }
+        
+        if (heldItem != null)
+        {
+            if (heldItem.name == "Lantern")
+            {
+                fogDensity = 0.01f;
+                enemyVisuals.SetActive(true);
+                for (int i = 0; i < enemyRenderers.Length; i++)
+                {
+                    enemyRenderers[i].enabled = true;
+                }
+            }
+            else
+            {
+                fogDensity = 0.02f;
+                enemyVisuals.SetActive(false);
+                for (int i = 0; i < enemyRenderers.Length; i++)
+                {
+                    enemyRenderers[i].enabled = false;
+                }
+            }
+        }
+        else
+        {
+            fogDensity = 0.02f;
+            if (enemyVisuals != null)
+            {
+                enemyVisuals.SetActive(false);
+                for (int i = 0; i < enemyRenderers.Length; i++)
+                {
+                    enemyRenderers[i].enabled = false;
+                }
+            }
+           
+        }
+        
+        RenderSettings.fogDensity = Mathf.Lerp(RenderSettings.fogDensity, fogDensity, 0.1f);
     }
 
     void ReadInputs()
@@ -152,7 +228,7 @@ public class PlayerCharacterControls : NetworkBehaviour
 
     public void interact(InputAction.CallbackContext context)
     {
-        if (context.started)
+        if (context.started && alive)
         {
             print("Interact button pressed");
             if (cameraTarget != Vector3.zero)
@@ -347,5 +423,37 @@ public class PlayerCharacterControls : NetworkBehaviour
         PW.transform.Rotate(180,0,0, Space.Self);
         PW.GetComponent<NetworkObject>().Spawn();
         
+    }
+
+    public void die()
+    {
+        print(gameObject.name + " Died");
+        deathClientRpc();
+        gameObject.tag = "Untagged";
+    }
+
+    [ClientRpc]
+    public void deathClientRpc()
+    {
+        print(gameObject.name + " Died Locally");
+        
+        if (IsOwner)
+        {
+            if(isHolding) dropObject();
+            deathImage.gameObject.SetActive(true);
+            alive = false;
+        }
+
+        MeshRenderer[] renderers = characterModel.GetComponentsInChildren<MeshRenderer>();
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            renderers[i].enabled = false;
+        }
+
+        Collider[] colliders = characterModel.GetComponentsInChildren<Collider>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].enabled = false;
+        }
     }
 }

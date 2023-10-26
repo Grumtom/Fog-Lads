@@ -48,7 +48,11 @@ public class Pickup : NetworkBehaviour
                     rb.isKinematic = false;
                 } 
             }
-           
+
+            if (transform.position.y < -10 && isHeld.Value == false)
+            {
+                transform.position = Vector3.up * 2;
+            }
         }
     }
 }

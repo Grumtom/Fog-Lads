@@ -7,14 +7,16 @@ TagManager:
   - Pickup
   - Interactable
   - Placement Slot
+  - Enemy
+  - EnemyVisuals
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
-  - 
+  - NavmeshPlanes
   - 
   - 
   - 

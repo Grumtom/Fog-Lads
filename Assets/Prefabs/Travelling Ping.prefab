@@ -4925,7 +4925,7 @@ MonoBehaviour:
     type: 3}
   deathTime: 5
   deathTimer: 0
-  speed: 0.5
+  speed: 1
 --- !u!135 &4028781704190158199
 SphereCollider:
   m_ObjectHideFlags: 0
