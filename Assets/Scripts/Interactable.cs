@@ -72,6 +72,11 @@ public class Interactable : NetworkBehaviour
             interact.Invoke();
         }
 
+        if (TryGetComponent<AudioSource>(out AudioSource audioSource))
+        {
+            audioSource.Play();
+        }
+
         if (continuousTrigger)
         {
             if (canTurnOff)

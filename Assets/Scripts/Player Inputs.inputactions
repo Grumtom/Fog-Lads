@@ -326,6 +326,17 @@
                     "action": "Ping Self",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cd516cc7-e54c-4cd8-b76f-3c650c3375fe",
+                    "path": "<Gamepad>/leftShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ping Self",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }
